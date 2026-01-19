@@ -8,21 +8,18 @@ import (
 )
 
 func main() {
-	// 1. Configuramos el servidor para que acepte conexiones de cualquier origen
 	server := webtransport.Server{
 		CheckOrigin: func(r *http.Request) bool { return true },
 	}
 
-	// 2. Definimos la ruta "/radio" donde se conectará tu Android
 	http.HandleFunc("/radio", func(w http.ResponseWriter, r *http.Request) {
 		session, err := server.Upgrade(w, r)
 		if err != nil {
-			fmt.Printf("Error al conectar: %v\n", err)
+			fmt.Printf("Error upgrade: %v\n", err)
 			return
 		}
-		fmt.Println("¡Conexión establecida con el celular!")
+		fmt.Println("¡Android conectado!")
 
-		// 3. Recibimos el audio
 		for {
 			stream, err := session.AcceptUniStream(context.Background())
 			if err != nil {
@@ -35,14 +32,12 @@ func main() {
 					if err != nil {
 						break
 					}
-					// Aquí llegan los bytes del micrófono
-					fmt.Printf("Recibiendo %d bytes de audio en tiempo real...\n", n)
+					fmt.Printf("Recibidos %d bytes\n", n)
 				}
 			}()
 		}
 	})
 
-	// 4. Iniciamos el servidor en el puerto 8080
-	fmt.Println("Servidor de Radio escuchando en el puerto 8080...")
+	fmt.Println("Servidor escuchando en puerto 8080...")
 	http.ListenAndServe(":8080", nil)
 }
