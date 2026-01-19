@@ -17,7 +17,7 @@ func main() {
 		if err != nil {
 			return
 		}
-		fmt.Println("Celular conectado")
+		
 		for {
 			stream, err := session.AcceptUniStream(context.Background())
 			if err != nil {
@@ -26,11 +26,10 @@ func main() {
 			go func(s webtransport.ReceiveStream) {
 				buf := make([]byte, 4096)
 				for {
-					n, err := s.Read(buf)
+					_, err := s.Read(buf)
 					if err != nil {
 						break
 					}
-					fmt.Printf("Audio: %d bytes\n", n)
 				}
 			}(stream)
 		}
