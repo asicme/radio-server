@@ -1,0 +1,48 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"github.com/quic-go/webtransport-go"
+)
+
+func main() {
+	// 1. Configuramos el servidor para que acepte conexiones de cualquier origen
+	server := webtransport.Server{
+		CheckOrigin: func(r *http.Request) bool { return true },
+	}
+
+	// 2. Definimos la ruta "/radio" donde se conectará tu Android
+	http.HandleFunc("/radio", func(w http.ResponseWriter, r *http.Request) {
+		session, err := server.Upgrade(w, r)
+		if err != nil {
+			fmt.Printf("Error al conectar: %v\n", err)
+			return
+		}
+		fmt.Println("¡Conexión establecida con el celular!")
+
+		// 3. Recibimos el audio
+		for {
+			stream, err := session.AcceptUniStream(context.Background())
+			if err != nil {
+				break
+			}
+			go func() {
+				buf := make([]byte, 4096)
+				for {
+					n, err := stream.Read(buf)
+					if err != nil {
+						break
+					}
+					// Aquí llegan los bytes del micrófono
+					fmt.Printf("Recibiendo %d bytes de audio en tiempo real...\n", n)
+				}
+			}()
+		}
+	})
+
+	// 4. Iniciamos el servidor en el puerto 8080
+	fmt.Println("Servidor de Radio escuchando en el puerto 8080...")
+	http.ListenAndServe(":8080", nil)
+}
